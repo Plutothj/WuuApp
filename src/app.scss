@@ -1,0 +1,15 @@
+.contaier {
+  background-color: #cfe4ff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  .nut-checkbox__icon--unchecked {
+    color: #a7bae5;
+  }
+  .nut-checkbox__icon {
+    color: #a7bae5;
+  }
+  list-style: none;
+}
