@@ -81,9 +81,9 @@ export default {
         .then((res) => {
           if (res._id) {
             that.show = true;
-            // Taro.navigateTo({
-            //   url: "/pages/regret/index",
-            // });
+            Taro.navigateTo({
+              url: "/pages/index/index",
+            });
           }
         });
     },

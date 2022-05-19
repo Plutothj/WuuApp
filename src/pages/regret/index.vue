@@ -65,6 +65,7 @@ export default {
     getList() {
       let that = this;
       db.collection("regret_list")
+        .orderBy("time", "desc")
         .get()
         .then((res) => {
           console.log(res);

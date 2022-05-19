@@ -1,6 +1,6 @@
 <template>
   <view class="contaier">
-    <div class="memorial" @click="handleLogo"></div>
+    <div class="memorial" @click="getUserInfo"></div>
 
     <div class="bottom-app">
       <div class="left" @click="handleRegret('1')">
@@ -13,12 +13,12 @@
     <div class="integral_box">
       <div>
         <div>我们在一起的</div>
-        <div class="number">520 <span>天</span></div>
+        <div class="number">{{ getTime() }} <span>天</span></div>
       </div>
       <div>
         <div>宝贝你已经有</div>
         <div class="number">
-          52 <span>积分</span>
+          {{ totalIntegral }} <span>积分</span>
           <span style="float: right">
             <nut-button
               size="mini"
@@ -40,7 +40,7 @@
                 <nut-button
                   color="#a7bae5"
                   size="mini"
-                  @click="handleFinish(item._id)"
+                  @click="handleFinish(item._id, item.value)"
                   type="info"
                   >完成</nut-button
                 >
@@ -78,6 +78,11 @@
       type="success"
     />
     <nut-toast msg="太棒了宝贝！" v-model:visible="show2" type="success" />
+    <nut-toast
+      :msg="userInfo.nickName + '你终于来了！'"
+      v-model:visible="show3"
+    />
+    <nut-toast msg="先点击下玉桂狗吧" v-model:visible="show4" />
   </view>
 </template>
 
@@ -90,9 +95,28 @@ export default {
   name: "Index",
   components: {},
   mounted() {
-    Taro.cloud.init();
     this.getList();
     this.getFinishList();
+    if (wx.getStorageSync("user")) {
+      this.getIntegral();
+    } else {
+      this.show4 = true;
+    }
+
+    let that = this;
+    Taro.cloud
+      .callFunction({
+        name: "login",
+        data: {},
+      })
+      .then((res) => {
+        console.log(res);
+        wx.setStorageSync("userInfo", JSON.stringify(res.result));
+        this.context = res.result;
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   },
   data() {
     return {
@@ -103,13 +127,79 @@ export default {
       list: [],
       truelist: [],
       show2: false,
+      show3: false,
+      show4: false,
+      integral: 0,
+      context: "",
+      userInfo: {},
+      hasLogin: false,
+      totalIntegral: 0,
     };
   },
   methods: {
+    getUserInfo() {
+      let that = this;
+      if (wx.getStorageSync("user")) {
+        wx.vibrateShort({
+          type: "heavy",
+          success: (res) => {
+            this.show = true;
+          },
+        });
+      } else {
+        Taro.getUserProfile({
+          lang: "zh_CN",
+          desc: "获取你的昵称、头像",
+          success: (res) => {
+            console.log(res);
+            that.userInfo = res.userInfo;
+            wx.setStorageSync("user", JSON.stringify(res.userInfo));
+            that.show3 = true;
+            that.createUserInfo();
+          },
+        });
+      }
+    },
+    createUserInfo() {
+      let that = this;
+      db.collection("user_info").add({
+        data: {
+          integral: that.totalIntegral,
+          name: that.userInfo.nickName,
+        },
+        success: function (res) {
+          that.getIntegral();
+        },
+      });
+    },
+    getTime() {
+      let futimg = "2021,8,2";
+      let nowtime = new Date().getTime(); // 现在时间转换为时间戳
+      let futruetime = new Date(futimg).getTime(); // 未来时间转换为时间戳
+      let msec = nowtime - futruetime; // 毫秒 未来时间-现在时间
+      let time = msec / 1000; // 毫秒/1000
+      let day = parseInt(time / 86400); // 天  24*60*60*1000
+
+      return day;
+    },
+    getIntegral() {
+      let that = this;
+
+      db.collection("user_info")
+        .where({ _openid: that.context.OPENID })
+        .get({
+          success: function (res) {
+            that.totalIntegral = res.data[0].integral;
+
+            wx.setStorageSync("integral", that.totalIntegral);
+          },
+        });
+    },
     getList() {
       const _ = db.command;
       let that = this;
       db.collection("task_list")
+        .orderBy("addtime", "desc")
         .where({
           // gt 方法用于指定一个 "大于" 条件，此处 _.gt(30) 是一个 "大于 30" 的条件
           isFinish: _.eq(false),
@@ -131,6 +221,11 @@ export default {
         .get({
           success: function (res) {
             that.truelist = res.data;
+
+            // let result = res.data.reduce((a, b) => {
+            //   a = a + +b.value;
+            //   return a;
+            // }, 0);
           },
         });
     },
@@ -145,14 +240,7 @@ export default {
         });
       }
     },
-    handleLogo() {
-      wx.vibrateShort({
-        type: "heavy",
-        success: (res) => {
-          this.show = true;
-        },
-      });
-    },
+
     handleAdd() {
       Taro.navigateTo({
         url: "/pages/task_add/index",
@@ -163,7 +251,24 @@ export default {
         url: "/pages/commodity/index",
       });
     },
-    handleFinish(id) {
+    updateIntegral(id, num) {
+      let that = this;
+      db.collection("user_info")
+        .where({ _openid: that.context.OPENID })
+        .update({
+          // data 传入需要局部更新的数据
+          data: {
+            // 表示将 done 字段置为 true
+            integral: that.totalIntegral + +num,
+          },
+        })
+        .then((res) => {
+          that.getList();
+          that.getFinishList();
+          that.getIntegral();
+        });
+    },
+    handleFinish(id, num) {
       let that = this;
       db.collection("task_list")
         .doc(id)
@@ -173,11 +278,11 @@ export default {
             // 表示将 done 字段置为 true
             isFinish: true,
           },
-          success: function (res) {
-            that.show2 = true;
-            that.getList();
-            console.log(res.data);
-          },
+        })
+        .then((res) => {
+          that.show2 = true;
+
+          that.updateIntegral(id, num);
         });
     },
   },

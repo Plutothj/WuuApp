@@ -38,12 +38,12 @@
       <div>
         <nut-radiogroup v-model="radioVal" direction="horizontal">
           <nut-radio shape="button" label="1">餐饮</nut-radio>
-          <nut-radio shape="button" label="2">公交</nut-radio>
+          <nut-radio shape="button" label="2">衣服</nut-radio>
           <nut-radio shape="button" label="3">购物</nut-radio>
-          <nut-radio shape="button" label="4">旅行</nut-radio>
+          <nut-radio shape="button" label="4">人际</nut-radio>
           <nut-radio shape="button" label="5">水果</nut-radio>
           <nut-radio shape="button" label="6">学习</nut-radio>
-          <nut-radio shape="button" label="7">父母</nut-radio>
+          <nut-radio shape="button" label="7">化妆品</nut-radio>
           <nut-radio shape="button" label="8">其他</nut-radio>
         </nut-radiogroup>
 
@@ -165,13 +165,13 @@ export default {
           return "餐饮";
           break;
         case "2":
-          return "公交";
+          return "衣服";
           break;
         case "3":
           return "购物";
           break;
         case "4":
-          return "旅行";
+          return "人际";
           break;
         case "5":
           return "水果";
@@ -180,7 +180,7 @@ export default {
           return "学习";
           break;
         case "7":
-          return "父母";
+          return "化妆品";
           break;
         case "8":
           return "其他";

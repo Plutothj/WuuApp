@@ -31,6 +31,7 @@ import {
   Card,
   Tag,
   Price,
+  InputNumber,
 } from "@nutui/nutui-taro";
 
 import "./app.scss";
@@ -75,5 +76,6 @@ App.use(Dialog)
   .use(Card)
   .use(Tag)
   .use(Price)
+  .use(InputNumber)
   .use(CellGroup);
 export default App;
